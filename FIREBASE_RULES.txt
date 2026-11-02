@@ -1,0 +1,45 @@
+========================================
+FIREBASE REALTIME DATABASE RULES
+========================================
+
+Your dashboard is stuck on "Firebase: Connecting..." because your Database Rules are blocking read access.
+
+FOLLOW THESE STEPS:
+
+1. Go to Firebase Console: https://console.firebase.google.com
+2. Select your project: "self-balancing-7a9fe"
+3. Click "Realtime Database" in left menu
+4. Click the "Rules" tab at the top
+5. Replace ALL existing rules with this:
+
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+
+6. Click "Publish" button
+
+
+SAFER PRODUCTION RULES (optional - only after testing):
+If you want to lock down to just the Traffic_Manage path:
+
+{
+  "rules": {
+    "Traffic_Manage": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
+
+
+AFTER UPDATING RULES:
+1. Refresh your dashboard at http://127.0.0.1:5000
+2. You should see "Firebase: Connected ✓" 
+3. Mode button will show "AUTO" or "MANUAL"
+4. Click the mode button to toggle between AUTO/MANUAL
+5. All data should update in real-time
+
+========================================

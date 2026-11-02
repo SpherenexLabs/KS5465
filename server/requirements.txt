@@ -1,0 +1,5 @@
+flask==3.0.2
+opencv-python==4.9.0.80
+ultralytics==8.3.0
+firebase-admin==6.5.0
+numpy==1.26.4

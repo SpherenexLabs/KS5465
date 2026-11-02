@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Traffic AI - Real-time Management System</title>
+  <link rel="stylesheet" href="/static/css/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Firebase Web SDK (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getDatabase, ref, onValue, query, limitToLast, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBzXzocbdytn4N8vLrT-V2JYZ8pgqWrbC0",
+      authDomain: "self-balancing-7a9fe.firebaseapp.com",
+      databaseURL: "https://self-balancing-7a9fe-default-rtdb.firebaseio.com",
+      projectId: "self-balancing-7a9fe",
+      storageBucket: "self-balancing-7a9fe.appspot.com",
+      messagingSenderId: "1044959372723",
+      appId: "1:1044959372723:web:7e1f73307107cf91ba97c6",
+      measurementId: "G-357J7ZXYED"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.__FB__ = { db, ref, onValue, query, limitToLast, onChildAdded };
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <div class="title">Smart Traffic AI</div>
+        <div class="sub">AI-Powered Traffic Management System</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn primary" id="btnToggleMode">
+        <span class="btnIcon">⚡</span>
+        <span class="btnText">Mode: -</span>
+      </button>
+      <button class="btn" id="btnManualToasts">
+        <span class="btnIcon">🔔</span>
+        <span class="btnText">Test Alert</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- Camera Feed Section -->
+    <section class="card camera-card">
+      <div class="cardHead">
+        <div class="h">🎥 Live Camera Feed</div>
+        <div class="badge" id="fbStatus">Firebase: Connecting...</div>
+      </div>
+
+      <div class="videoWrap">
+        <img id="live" src="/video_feed" alt="Live Stream"/>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-icon">🛣️</div>
+          <div>
+            <div class="k">Lane</div>
+            <div class="v" id="vLine">-</div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon">📊</div>
+          <div>
+            <div class="k">Density</div>
+            <div class="v" id="vDensity">-</div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon">🚗</div>
+          <div>
+            <div class="k">Vehicles</div>
+            <div class="v highlight" id="vCount">-</div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-icon">📈</div>
+          <div>
+            <div class="k">Occupancy</div>
+            <div class="v" id="vOcc">-</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Detection Info Banner -->
+      <div class="detection-banner">
+        <div class="detection-label">
+          <span class="pulse-dot"></span>
+          LIVE DETECTION ACTIVE
+        </div>
+        <div class="detection-info">
+          Tracking vehicles in real-time with AI-powered analysis
+        </div>
+      </div>
+
+      <div class="traffic-status">
+        <div class="status-item">
+          <span class="label">Traffic Status:</span>
+          <span class="value" id="vTraffic">-</span>
+        </div>
+        <div class="status-item">
+          <span class="label">System Status:</span>
+          <span class="value" id="vStatus">-</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Control Panel Section -->
+    <section class="card control-card">
+      <div class="cardHead">
+        <div class="h">🚦 Signal Control</div>
+        <div class="mode-badge" id="vMode">Mode: -</div>
+      </div>
+
+      <div class="signal">
+        <div class="lamp red" id="lampR"></div>
+        <div class="lamp yellow" id="lampY"></div>
+        <div class="lamp green" id="lampG"></div>
+      </div>
+
+      <div class="signal-info">
+        <div class="info-item">
+          <span class="label">Current Signal:</span>
+          <span class="value signal-value" id="vSignal">-</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Signal Timer:</span>
+          <span class="value" id="vGreenTime">-</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="manual-controls">
+        <div class="control-header">⚙️ Manual Override</div>
+        <div class="control-section">
+          <div class="section-title">Signal Control</div>
+          <div class="btn-grid">
+            <button class="btn small success" id="forceGreen">
+              <span class="btn-icon">🟢</span>
+              GREEN
+            </button>
+            <button class="btn small warning" id="forceYellow">
+              <span class="btn-icon">🟡</span>
+              YELLOW
+            </button>
+            <button class="btn small danger" id="forceRed">
+              <span class="btn-icon">🔴</span>
+              RED
+            </button>
+          </div>
+        </div>
+        <div class="control-section">
+          <div class="section-title">Lane Selection</div>
+          <div class="btn-grid lanes">
+            <button class="btn small" data-line="1">Lane 1</button>
+            <button class="btn small" data-line="2">Lane 2</button>
+            <button class="btn small" data-line="3">Lane 3</button>
+            <button class="btn small" data-line="4">Lane 4</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section class="card full analytics-card">
+      <div class="cardHead">
+        <div class="h">📊 Traffic Analytics</div>
+        <div class="mini">Real-time monitoring • Density tracking • Vehicle count • Occupancy analysis</div>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart" height="80"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Modal Dialog -->
+  <div class="modal" id="modal">
+    <div class="modalCard">
+      <div class="modalTitle" id="modalTitle">Alert</div>
+      <div class="modalMsg" id="modalMsg">-</div>
+      <div class="modalActions">
+        <button class="btn primary" id="modalOk">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/ui.js"></script>
+</body>
+</html>
